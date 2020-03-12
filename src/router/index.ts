@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
-import Dialog from '@/components/Dialog.vue'
+import Depart from '@/components/Depart/Depart-Mng.vue';
 
 Vue.use(VueRouter)
 
@@ -14,16 +14,13 @@ const routes = [
   {
     path: '/about',
     name: 'About',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
     component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
   },
   {
-    path: '/dialog',
-    name: 'Dialog',
-    component: Dialog
-  },
+    path: '/mng/mainview',
+    name: 'Depart',
+    component: Depart
+  }
 ]
 
 const router = new VueRouter({
