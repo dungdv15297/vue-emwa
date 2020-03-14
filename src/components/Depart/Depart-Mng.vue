@@ -18,6 +18,8 @@
             :height="'100%'"
             :fixed-header="true"
             :items="items"
+            :loading="loading"
+            loading-text="Loading data... Please wait"
             sort-by="staffId"
             class="10"
           >
@@ -26,22 +28,26 @@
                 <v-toolbar-title>DEPART INFORMATION AND MANAGEMENT</v-toolbar-title>
                 <v-divider class="mx-4" inset vertical></v-divider>
                 <v-spacer></v-spacer>
+                <v-spacer></v-spacer>
+
+                <v-text-field
+                  label="Search......"
+                  append-icon="search"
+                  v-model="searchText"
+                  hide-details
+                  outlined
+                  dense
+                ></v-text-field>
+                <v-btn icon color="green" @click="onLoad()">
+                  <v-icon dense :dark="true">replay</v-icon>
+                </v-btn>
+
                 <!-- Create or Edit dialog -->
                 <v-dialog v-model="dialog" persistent max-width="500px">
                   <template v-slot:activator="{ on }">
-                    <v-row>
-                      <v-col cols="8"></v-col>
-                      <v-col cols="2">
-                        <v-btn :loading="loading" icon color="green" @click="onLoad()">
-                          <v-icon dense :dark="true">replay</v-icon>
-                        </v-btn>
-                      </v-col>
-                      <v-col cols="2">
-                        <v-btn icon color="indigo" v-on="on">
-                          <v-icon dense>add_circle</v-icon>
-                        </v-btn>
-                      </v-col>
-                    </v-row>
+                    <v-btn icon color="indigo" v-on="on">
+                      <v-icon dense>add_circle</v-icon>
+                    </v-btn>
                   </template>
 
                   <v-card>
@@ -89,20 +95,14 @@
             </template>
             <template v-slot:item.nos="{ item }">{{nos(item)}}</template>
             <template v-slot:item.actions="{ item }">
-              <v-btn :loading="loading" icon color="indigo" @click="editItem(item)">
+              <v-btn icon color="indigo" @click="editItem(item)">
                 <v-icon small>mdi-pencil</v-icon>
               </v-btn>
-              <v-btn :loading="loading" icon color="red" @click="deleteItem(item)">
+              <v-btn icon color="red" @click="deleteItem(item)">
                 <v-icon small>mdi-delete</v-icon>
               </v-btn>
             </template>
             <!-- Create or Edit dialog -->
-
-            <!-- Button reset when table have no data -->
-            <template v-slot:no-data>
-              <v-btn color="primary" @click="onLoad()">Reset</v-btn>
-            </template>
-            <!-- Button reset when table have no data -->
           </v-data-table>
         </v-container>
       </v-card>
@@ -121,7 +121,7 @@ export default class DepartMng extends Vue {
   valid = true;
   fullForm = false;
   dialog = false;
-  loading = false;
+  loading = "true";
   //For v-table
   headers = departHeader;
   editedIndex = -1;
@@ -155,25 +155,22 @@ export default class DepartMng extends Vue {
   }
   //Get all data of depart in db
   async getAllData(): Promise<void> {
+    this.items = [];
     await axios.get("http://localhost:9000/api/v1/depart").then(response => {
       this.items = response.data.data;
     });
   }
   async onLoad(): Promise<void> {
-    this.loading = true;
-    await this.getAllData();
-    this.loading = false;
+    this.getAllData();
   }
   close() {
     this.dialog = false;
-    setTimeout(() => {
       this.editedItem = this.defaultItem;
       this.editedIndex = -1;
       (this.$refs.form as any).resetValidation();
-    }, 300);
   }
   async save(): Promise<void> {
-    axios.defaults.headers['Content-Type'] = 'application/json;charset=UTF-8';
+    axios.defaults.headers["Content-Type"] = "application/json;charset=UTF-8";
     if (this.editedIndex > -1) {
       //edit depaprt
       await axios
@@ -197,7 +194,7 @@ export default class DepartMng extends Vue {
   }
   async editItem(item: Depart): Promise<void> {
     this.editedIndex = this.items.indexOf(item);
-    this.editedItem = item;
+    Object.assign(this.editedItem, item);
     this.dialog = true;
   }
   async deleteItem(item: Depart) {
