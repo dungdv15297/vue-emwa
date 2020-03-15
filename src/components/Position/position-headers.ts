@@ -1,12 +1,12 @@
-export const departHeader = [
+export const positionHeader = [
   {
-    text: 'Depart Id',
+    text: 'Position Id',
     align: 'start',
     value: 'convertId'
   },
   {
-    text: 'Depart Name',
-    value: 'departName'
+    text: 'Position Name',
+    value: 'positionName'
   },
   {
     text: 'Description',

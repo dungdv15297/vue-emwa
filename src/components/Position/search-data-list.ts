@@ -1,7 +1,7 @@
 export default class SearchDataList {
-    departId = -1;
+    positionId = -1;
     convertId = '';
-    departName = '';
+    positionName = '';
     description = '';
     nos = 0;
     staffs = [];

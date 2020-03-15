@@ -2,14 +2,14 @@
   <v-row justify="center">
     <v-dialog v-model="fullForm" fullscreen hide-overlay transition="dialog-bottom-transition">
       <template v-slot:activator="{ on }">
-        <v-btn color="primary" dark v-on="on" @click="onLoad()">Depart Manager</v-btn>
+        <v-btn color="primary" dark v-on="on" @click="onLoad()">POSITION Manager</v-btn>
       </template>
       <v-card>
         <v-toolbar dark color="primary">
           <v-btn icon dark @click="fullForm = false">
             <v-icon>mdi-close</v-icon>
           </v-btn>
-          <v-toolbar-title>DEPART MANAGER</v-toolbar-title>
+          <v-toolbar-title>POSITION MANAGER</v-toolbar-title>
         </v-toolbar>
         <v-container>
           <v-data-table
@@ -23,7 +23,7 @@
           >
             <template v-slot:top>
               <v-toolbar flat color="white">
-                <v-toolbar-title>DEPART INFORMATION AND MANAGEMENT</v-toolbar-title>
+                <v-toolbar-title>POSITION MANAGEMENT</v-toolbar-title>
                 <v-divider class="mx-4" inset vertical></v-divider>
                 <v-spacer></v-spacer>
                 <v-spacer></v-spacer>
@@ -59,11 +59,11 @@
                           <v-row>
                             <v-col>
                               <v-text-field
-                                v-model="editedItem.departName"
+                                v-model="editedItem.positionName"
                                 required
                                 :rules="rules.nameRules"
                                 :counter="50"
-                                label="Depart Name"
+                                label="Position Name"
                               ></v-text-field>
                             </v-col>
                           </v-row>
@@ -110,46 +110,45 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import axios from "axios";
-import Depart, { DepartImpl } from "@/domain/depart";
-import { departHeader } from "./depart-headers";
+import Position, { PositionImpl } from "@/domain/position";
+import { positionHeader } from "./position-headers";
 import * as rules from "./validation-rules";
 import SearchDataList from "./search-data-list";
 @Component({})
-export default class DepartMng extends Vue {
+export default class PositionMng extends Vue {
   rules = rules;
   valid = true;
   fullForm = false;
   dialog = false;
-  loading = "true";
   //For v-table
-  headers = departHeader;
+  headers = positionHeader;
   editedIndex = -1;
-  editedItem: Depart = new DepartImpl();
+  editedItem: Position = new PositionImpl();
   items: SearchDataList[] = [];
   searchText = "";
-  //Display depart id in table and another dialog
+  //Display POSITION id in table and another dialog
   convertId(id: number): string {
-    return id >= 0 ? "STAFF_NWS_" + id : "NewDepart";
+    return id >= 0 ? "POSITION_NWS_" + id : "NewPosition";
   }
-  //Display the number of staffs in depart
-  nos(item: Depart): number {
+  //Display the number of staffs in POSITION
+  nos(item: Position): number {
     return (item.staffs as any).length;
   }
   //Get form title for form dialog
   get formTitle(): string {
-    const title = "Edit Depart " + this.convertId(this.editedItem.departId);
-    return this.editedIndex === -1 ? "New Depart" : title;
+    const title = "Edit position " + this.convertId(this.editedItem.positionId);
+    return this.editedIndex === -1 ? "New position" : title;
   }
-  //Get all data of depart in db
+  //Get all data of Position in db
   async getAllData(): Promise<void> {
     this.items = [];
-    await axios.get("http://localhost:9000/api/v1/depart").then(response => {
+    await axios.get("http://localhost:9000/api/v1/position").then(response => {
       if (response.data.data) {
-        response.data.data.forEach((element: Depart) => {
+        response.data.data.forEach((element: Position) => {
           const item: SearchDataList = new SearchDataList();
           Object.assign(item, element);
           item.nos = this.nos(element);
-          item.convertId = this.convertId(item.departId);
+          item.convertId = this.convertId(item.positionId);
           this.items.push(item);
         });
       }
@@ -160,18 +159,17 @@ export default class DepartMng extends Vue {
   }
   close(): void {
     this.dialog = false;
-    this.editedItem = new DepartImpl();
+    this.editedItem = new PositionImpl();
     this.editedIndex = -1;
     (this.$refs.form as any).resetValidation();
   }
   async save(): Promise<void> {
-    // axios.defaults.headers["Content-Type"] = "application/json;charset=UTF-8";
-    const depart: Depart = new DepartImpl();
-    Object.assign(depart, this.editedItem);
+    const position: Position = new PositionImpl();
+    Object.assign(position, this.editedItem);
     if (this.editedIndex > -1) {
       //edit depaprt
       await axios
-        .put("http://localhost:9000/api/v1/depart", depart)
+        .put("http://localhost:9000/api/v1/position", position)
         .then(response => {
           if (response.data.status === "SUCCESS") {
             this.getAllData();
@@ -179,9 +177,9 @@ export default class DepartMng extends Vue {
           this.$dialog.message.success(response.data.message, this.config);
         });
     } else {
-      //create depart
+      //create POSITION
       await axios
-        .post("http://localhost:9000/api/v1/depart", depart)
+        .post("http://localhost:9000/api/v1/position", position)
         .then(response => {
           if (response.data.status === "SUCCESS") {
             this.getAllData();
@@ -199,7 +197,7 @@ export default class DepartMng extends Vue {
   async deleteItem(item: SearchDataList) {
     const warning1 = await this.$dialog["warning"]({
       title: "Warning!!",
-      text: "Do you really want to delete this depart?",
+      text: "Do you really want to delete this position?",
       persistent: true
     });
     if (!warning1) {
@@ -208,7 +206,7 @@ export default class DepartMng extends Vue {
     if (item.nos > 0) {
       const warning2 = await this.$dialog.warning({
         title: "Warning!!",
-        text: "This depart has "+ item.nos +" staffs. Do you really want to delete this depart?",
+        text: "This position has "+ item.nos +" staffs. Do you really want to delete this position?",
         persistent: true
       })
       if (!warning2) {
@@ -217,7 +215,7 @@ export default class DepartMng extends Vue {
     }
     if (warning1) {
       await axios
-        .delete(`http://localhost:9000/api/v1/depart/${item.departId}`)
+        .delete(`http://localhost:9000/api/v1/position/${item.positionId}`)
         .then(response => {
           if (response.data.status === "SUCCESS") {
             this.getAllData();

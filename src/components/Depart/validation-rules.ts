@@ -6,5 +6,5 @@ export const nameRules = [
 export const  descRules = [
     (v: any) => !!v || "Description is required!",
     (v: any) =>
-      (v && v.length <= 250) || "Depart Name must be less than 250 character!"
+      (v && v.length <= 250) || "Description must be less than 250 character!"
   ];

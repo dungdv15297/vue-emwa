@@ -2,14 +2,14 @@
   <v-row justify="center">
     <v-dialog v-model="fullForm" fullscreen hide-overlay transition="dialog-bottom-transition">
       <template v-slot:activator="{ on }">
-        <v-btn color="primary" dark v-on="on" @click="onLoad()">Depart Manager</v-btn>
+        <v-btn color="primary" dark v-on="on" @click="onLoad()">Recruitment Manager</v-btn>
       </template>
       <v-card>
         <v-toolbar dark color="primary">
           <v-btn icon dark @click="fullForm = false">
             <v-icon>mdi-close</v-icon>
           </v-btn>
-          <v-toolbar-title>DEPART MANAGER</v-toolbar-title>
+          <v-toolbar-title>RECRUITMENT MANAGER</v-toolbar-title>
         </v-toolbar>
         <v-container>
           <v-data-table
@@ -23,7 +23,7 @@
           >
             <template v-slot:top>
               <v-toolbar flat color="white">
-                <v-toolbar-title>DEPART INFORMATION AND MANAGEMENT</v-toolbar-title>
+                <v-toolbar-title>RECRUITMENT MANAGEMENT</v-toolbar-title>
                 <v-divider class="mx-4" inset vertical></v-divider>
                 <v-spacer></v-spacer>
                 <v-spacer></v-spacer>
@@ -59,11 +59,11 @@
                           <v-row>
                             <v-col>
                               <v-text-field
-                                v-model="editedItem.departName"
+                                v-model="editedItem.positionName"
                                 required
-                                :rules="rules.nameRules"
+                                :rules="rules.titleRules"
                                 :counter="50"
-                                label="Depart Name"
+                                label="Recruitment Name"
                               ></v-text-field>
                             </v-col>
                           </v-row>
@@ -78,6 +78,14 @@
                               ></v-textarea>
                             </v-col>
                           </v-row>
+                          <v-row>
+                            <v-col>
+                              <v-radio-group v-model="editedItem.status" row>
+                                <v-radio label="Recruiting" value="true" checked></v-radio>
+                                <v-radio label="Stop Recruiting" value="false"></v-radio>
+                              </v-radio-group>
+                            </v-col>
+                          </v-row>
                         </v-form>
                       </v-container>
                     </v-card-text>
@@ -90,6 +98,9 @@
                   </v-card>
                 </v-dialog>
               </v-toolbar>
+            </template>
+            <template v-slot:item.status="{ item }">
+              {{ item.status? 'Recruiting' : 'Stop recruiting' }}
             </template>
             <template v-slot:item.actions="{ item }">
               <v-btn icon color="indigo" @click="editItem(item)">
@@ -110,47 +121,46 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import axios from "axios";
-import Depart, { DepartImpl } from "@/domain/depart";
-import { departHeader } from "./depart-headers";
+import Recruitment, { RecruitmentImpl } from "@/domain/recruitment";
+import { recruitmentHeader } from "./recruitment-headers";
 import * as rules from "./validation-rules";
 import SearchDataList from "./search-data-list";
+import Staff from '@/domain/staff';
 @Component({})
-export default class DepartMng extends Vue {
+export default class RecruitmentMng extends Vue {
   rules = rules;
   valid = true;
   fullForm = false;
   dialog = false;
-  loading = "true";
   //For v-table
-  headers = departHeader;
+  headers = recruitmentHeader;
   editedIndex = -1;
-  editedItem: Depart = new DepartImpl();
+  editedItem: Recruitment = new RecruitmentImpl();
   items: SearchDataList[] = [];
   searchText = "";
-  //Display depart id in table and another dialog
+  //Display RECRUITMENT id in table and another dialog
   convertId(id: number): string {
-    return id >= 0 ? "STAFF_NWS_" + id : "NewDepart";
-  }
-  //Display the number of staffs in depart
-  nos(item: Depart): number {
-    return (item.staffs as any).length;
+    return id >= 0 ? "RECRUITMENT_NWS_" + id : "NewRecruitment";
   }
   //Get form title for form dialog
   get formTitle(): string {
-    const title = "Edit Depart " + this.convertId(this.editedItem.departId);
-    return this.editedIndex === -1 ? "New Depart" : title;
+    const title = "Edit recruitment " + this.convertId(this.editedItem.recruitmentId);
+    return this.editedIndex === -1 ? "New recruitment" : title;
   }
-  //Get all data of depart in db
+  //Get all data of Recruitment in db
   async getAllData(): Promise<void> {
     this.items = [];
-    await axios.get("http://localhost:9000/api/v1/depart").then(response => {
+    await axios.get("http://localhost:9000/api/v1/recruitment").then(response => {
       if (response.data.data) {
-        response.data.data.forEach((element: Depart) => {
+        response.data.data.forEach((element: Recruitment) => {
           const item: SearchDataList = new SearchDataList();
           Object.assign(item, element);
-          item.nos = this.nos(element);
-          item.convertId = this.convertId(item.departId);
+          item.creater = response.data.data.staff.staffName;
+          item.convertId = this.convertId(item.recruitmentId);
           this.items.push(item);
+        })
+        .catch(() => {
+          this.items = []
         });
       }
     });
@@ -160,18 +170,17 @@ export default class DepartMng extends Vue {
   }
   close(): void {
     this.dialog = false;
-    this.editedItem = new DepartImpl();
+    this.editedItem = new RecruitmentImpl();
     this.editedIndex = -1;
     (this.$refs.form as any).resetValidation();
   }
   async save(): Promise<void> {
-    // axios.defaults.headers["Content-Type"] = "application/json;charset=UTF-8";
-    const depart: Depart = new DepartImpl();
-    Object.assign(depart, this.editedItem);
+    const recruitment: Recruitment = new RecruitmentImpl();
+    Object.assign(recruitment, this.editedItem);
     if (this.editedIndex > -1) {
       //edit depaprt
       await axios
-        .put("http://localhost:9000/api/v1/depart", depart)
+        .put("http://localhost:9000/api/v1/recruitment", recruitment)
         .then(response => {
           if (response.data.status === "SUCCESS") {
             this.getAllData();
@@ -179,9 +188,9 @@ export default class DepartMng extends Vue {
           this.$dialog.message.success(response.data.message, this.config);
         });
     } else {
-      //create depart
+      //create RECRUITMENT
       await axios
-        .post("http://localhost:9000/api/v1/depart", depart)
+        .post("http://localhost:9000/api/v1/recruitment", recruitment)
         .then(response => {
           if (response.data.status === "SUCCESS") {
             this.getAllData();
@@ -199,25 +208,12 @@ export default class DepartMng extends Vue {
   async deleteItem(item: SearchDataList) {
     const warning1 = await this.$dialog["warning"]({
       title: "Warning!!",
-      text: "Do you really want to delete this depart?",
+      text: "Do you really want to delete this recruitment?",
       persistent: true
     });
-    if (!warning1) {
-      return;
-    }
-    if (item.nos > 0) {
-      const warning2 = await this.$dialog.warning({
-        title: "Warning!!",
-        text: "This depart has "+ item.nos +" staffs. Do you really want to delete this depart?",
-        persistent: true
-      })
-      if (!warning2) {
-        return;
-      }
-    }
     if (warning1) {
       await axios
-        .delete(`http://localhost:9000/api/v1/depart/${item.departId}`)
+        .delete(`http://localhost:9000/api/v1/recruitment/${item.recruitmentId}`)
         .then(response => {
           if (response.data.status === "SUCCESS") {
             this.getAllData();
@@ -231,7 +227,7 @@ export default class DepartMng extends Vue {
   }
   get config(): object {
     return {
-      position: "top-center",
+      recruitment: "top-center",
       timeout: 2000
     };
   }

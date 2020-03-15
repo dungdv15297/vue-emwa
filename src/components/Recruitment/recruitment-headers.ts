@@ -1,20 +1,24 @@
-export const departHeader = [
+export const recruitmentHeader = [
   {
-    text: 'Depart Id',
+    text: 'Recruitment Id',
     align: 'start',
     value: 'convertId'
   },
   {
-    text: 'Depart Name',
-    value: 'departName'
+    text: 'Title',
+    value: 'title'
+  },
+  {
+    text: 'Creater',
+    value: 'creater'
   },
   {
     text: 'Description',
     value: 'description'
   },
   {
-    text: 'NoS',
-    value: 'nos'
+    text: 'Status',
+    value: 'status'
   },
   {
     text: 'Actions',

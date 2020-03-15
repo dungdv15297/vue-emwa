@@ -1,8 +1,8 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
-import Depart from '@/components/Depart/Depart-Mng.vue';
-
+import MainView from '../views/MainView.vue';
+import Recruitment from '@/components/Recruitment/Recruitment-Mng.vue';
 Vue.use(VueRouter)
 
 const routes = [
@@ -18,8 +18,13 @@ const routes = [
   },
   {
     path: '/mng/mainview',
-    name: 'Depart',
-    component: Depart
+    name: 'MainView',
+    component: MainView
+  },
+  {
+    path: '/mng',
+    name: 'Recruitment',
+    component: Recruitment
   }
 ]
 
