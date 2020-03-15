@@ -18,8 +18,6 @@
             :height="'100%'"
             :fixed-header="true"
             :items="items"
-            :loading="loading"
-            loading-text="Loading data... Please wait"
             sort-by="staffId"
             class="10"
           >
@@ -29,7 +27,6 @@
                 <v-divider class="mx-4" inset vertical></v-divider>
                 <v-spacer></v-spacer>
                 <v-spacer></v-spacer>
-
                 <v-text-field
                   label="Search......"
                   append-icon="search"
@@ -38,6 +35,7 @@
                   outlined
                   dense
                 ></v-text-field>
+                <v-spacer></v-spacer>
                 <v-btn icon color="green" @click="onLoad()">
                   <v-icon dense :dark="true">replay</v-icon>
                 </v-btn>
@@ -63,7 +61,7 @@
                               <v-text-field
                                 v-model="editedItem.departName"
                                 required
-                                :rules="nameRules"
+                                :rules="rules.nameRules"
                                 :counter="50"
                                 label="Depart Name"
                               ></v-text-field>
@@ -74,7 +72,7 @@
                               <v-textarea
                                 v-model="editedItem.description"
                                 label="Description"
-                                :rules="descRules"
+                                :rules="rules.descRules"
                                 :counter="250"
                                 required
                               ></v-textarea>
@@ -93,7 +91,6 @@
                 </v-dialog>
               </v-toolbar>
             </template>
-            <template v-slot:item.nos="{ item }">{{nos(item)}}</template>
             <template v-slot:item.actions="{ item }">
               <v-btn icon color="indigo" @click="editItem(item)">
                 <v-icon small>mdi-pencil</v-icon>
@@ -115,9 +112,11 @@ import Component from "vue-class-component";
 import axios from "axios";
 import Depart, { DepartImpl } from "@/domain/depart";
 import { departHeader } from "./depart-headers";
-import "vuetify-dialog/dist/vuetify-dialog.css";
+import * as rules from "./validateion-rules";
+import SearchDataList from "./search-data-list";
 @Component({})
 export default class DepartMng extends Vue {
+  rules = rules;
   valid = true;
   fullForm = false;
   dialog = false;
@@ -126,27 +125,15 @@ export default class DepartMng extends Vue {
   headers = departHeader;
   editedIndex = -1;
   editedItem: Depart = new DepartImpl();
-  defaultItem: Depart = new DepartImpl();
-  items: Depart[] = [];
+  items: SearchDataList[] = [];
   searchText = "";
-  // Validate rules
-  nameRules = [
-    (v: any) => !!v || "Depart Name is required!",
-    (v: any) =>
-      (v && v.length <= 50) || "Depart Name must be less than 50 character!"
-  ];
-  descRules = [
-    (v: any) => !!v || "Description is required!",
-    (v: any) =>
-      (v && v.length <= 250) || "Depart Name must be less than 250 character!"
-  ];
   //Display depart id in table and another dialog
   convertId(id: number): string {
     return id >= 0 ? "STAFF_NWS_" + id : "NewDepart";
   }
   //Display the number of staffs in depart
   nos(item: Depart): number {
-    return item.staffs.length;
+    return (item.staffs as any).length;
   }
   //Get form title for form dialog
   get formTitle(): string {
@@ -157,47 +144,58 @@ export default class DepartMng extends Vue {
   async getAllData(): Promise<void> {
     this.items = [];
     await axios.get("http://localhost:9000/api/v1/depart").then(response => {
-      this.items = response.data.data;
+      if (response.data.data) {
+        response.data.data.forEach((element: Depart) => {
+          const item: SearchDataList = new SearchDataList();
+          Object.assign(item, element);
+          item.nos = this.nos(element).toString();
+          this.items.push(item);
+        });
+      }
     });
   }
   async onLoad(): Promise<void> {
     this.getAllData();
   }
-  close() {
+  close(): void {
     this.dialog = false;
-      this.editedItem = this.defaultItem;
-      this.editedIndex = -1;
-      (this.$refs.form as any).resetValidation();
+    this.editedItem = new DepartImpl();
+    this.editedIndex = -1;
+    (this.$refs.form as any).resetValidation();
   }
   async save(): Promise<void> {
-    axios.defaults.headers["Content-Type"] = "application/json;charset=UTF-8";
+    // axios.defaults.headers["Content-Type"] = "application/json;charset=UTF-8";
+    const depart: Depart = new DepartImpl();
+    Object.assign(depart, this.editedItem);
     if (this.editedIndex > -1) {
       //edit depaprt
       await axios
-        .put("http://localhost:9000/api/v1/depart", this.editedItem)
+        .put("http://localhost:9000/api/v1/depart", depart)
         .then(response => {
           if (response.data.status === "SUCCESS") {
             this.getAllData();
           }
+          this.$dialog.message.success(response.data.message, this.config);
         });
     } else {
       //create depart
       await axios
-        .post("http://localhost:9000/api/v1/depart", this.editedItem)
+        .post("http://localhost:9000/api/v1/depart", depart)
         .then(response => {
           if (response.data.status === "SUCCESS") {
             this.getAllData();
           }
+          this.$dialog.message.success(response.data.message, this.config);
         });
     }
     this.close();
   }
-  async editItem(item: Depart): Promise<void> {
+  async editItem(item: SearchDataList): Promise<void> {
     this.editedIndex = this.items.indexOf(item);
     Object.assign(this.editedItem, item);
     this.dialog = true;
   }
-  async deleteItem(item: Depart) {
+  async deleteItem(item: SearchDataList) {
     const res = await this.$dialog["warning"]({
       title: "Warning!!",
       text: "Do you really want to delete this depart?",
@@ -207,9 +205,21 @@ export default class DepartMng extends Vue {
       await axios
         .delete(`http://localhost:9000/api/v1/depart/${item.departId}`)
         .then(response => {
-          this.getAllData();
+          if (response.data.status === "SUCCESS") {
+            this.getAllData();
+          }
+          this.$dialog.message["success"](response.data.message, this.config);
+        })
+        .catch(error => {
+          this.$dialog.message.error(error, this.config);
         });
     }
+  }
+  get config(): object {
+    return {
+      position: "top-center",
+      timeout: 2000
+    };
   }
 }
 </script>

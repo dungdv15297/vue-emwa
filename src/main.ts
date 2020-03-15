@@ -9,7 +9,11 @@ import { BootstrapVue, IconsPlugin } from 'bootstrap-vue';
 Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
 Vue.use(vuetify);
-Vue.use(VuetifyDialog);
+Vue.use(VuetifyDialog, {
+  context: {
+    vuetify
+  }
+});
 Vue.config.productionTip = false;
 new Vue({
   router,
