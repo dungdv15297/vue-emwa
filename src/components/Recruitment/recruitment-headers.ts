@@ -9,10 +9,6 @@ export const recruitmentHeader = [
     value: 'title'
   },
   {
-    text: 'Creater',
-    value: 'creater'
-  },
-  {
     text: 'Description',
     value: 'description'
   },

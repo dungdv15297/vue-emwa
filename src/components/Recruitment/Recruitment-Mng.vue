@@ -18,7 +18,7 @@
             :height="'100%'"
             :fixed-header="true"
             :items="items"
-            sort-by="staffId"
+            sort-by="convertId"
             class="10"
           >
             <template v-slot:top>
@@ -59,11 +59,11 @@
                           <v-row>
                             <v-col>
                               <v-text-field
-                                v-model="editedItem.positionName"
+                                v-model="editedItem.title"
                                 required
                                 :rules="rules.titleRules"
                                 :counter="50"
-                                label="Recruitment Name"
+                                label="Title"
                               ></v-text-field>
                             </v-col>
                           </v-row>
@@ -80,8 +80,8 @@
                           </v-row>
                           <v-row>
                             <v-col>
-                              <v-radio-group v-model="editedItem.status" row>
-                                <v-radio label="Recruiting" value="true" checked></v-radio>
+                              <v-radio-group v-model="editedItem.status" :mandatory="false">
+                                <v-radio label="Recruiting" value="true"></v-radio>
                                 <v-radio label="Stop Recruiting" value="false"></v-radio>
                               </v-radio-group>
                             </v-col>
@@ -155,15 +155,15 @@ export default class RecruitmentMng extends Vue {
         response.data.data.forEach((element: Recruitment) => {
           const item: SearchDataList = new SearchDataList();
           Object.assign(item, element);
-          item.creater = response.data.data.staff.staffName;
           item.convertId = this.convertId(item.recruitmentId);
           this.items.push(item);
         })
-        .catch(() => {
-          this.items = []
-        });
       }
-    });
+    })
+    .catch(error => {
+      this.$dialog.message.error(error, this.config);
+      this.items = []
+    });;
   }
   async onLoad(): Promise<void> {
     this.getAllData();

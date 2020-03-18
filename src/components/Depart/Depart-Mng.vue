@@ -129,7 +129,7 @@ export default class DepartMng extends Vue {
   searchText = "";
   //Display depart id in table and another dialog
   convertId(id: number): string {
-    return id >= 0 ? "STAFF_NWS_" + id : "NewDepart";
+    return id >= 0 ? "DEPART_NWS_" + id : "NewDepart";
   }
   //Display the number of staffs in depart
   nos(item: Depart): number {
