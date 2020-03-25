@@ -227,7 +227,7 @@ export default class RecruitmentMng extends Vue {
   }
   get config(): object {
     return {
-      recruitment: "top-center",
+      position: "top-center",
       timeout: 2000
     };
   }

@@ -37,4 +37,3 @@ export const endRules = [
   (v: any) =>
     (v && v.length === 10) || "Any date must haave 10 character!"
 ];
-
